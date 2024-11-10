@@ -1,0 +1,26 @@
+import asyncio
+import time
+
+
+async def number1():
+    print("Привет!")
+
+
+async def number2():
+    print("Как дела?")
+
+
+
+async def number3():
+    print("До свидания!")
+
+
+tasks = [number1(), number2(), number3()]
+
+
+print(time.strftime('%X'))
+results = asyncio.gather(*tasks)
+loop = asyncio.get_event_loop()
+loop.run_until_complete(results)
+#asyncio.run(main(n))
+print(time.strftime('%X'))
