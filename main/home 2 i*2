@@ -1,0 +1,26 @@
+import asyncio
+import time
+import random
+
+
+numbers = [1, 2, 3, 4, 5]
+
+
+async def number1(i):
+    number = i*2
+    print(number)
+    await asyncio.sleep(random.randint(1, 3))
+
+
+async def main():
+    tasks = []
+    for number in numbers:
+        task = asyncio.create_task(number1(number))
+        await asyncio.sleep(random.randint(1, 3))
+    tasks.append(task)
+    await asyncio.gather(*tasks)
+
+
+print("Start Time:", time.strftime('%X'))
+asyncio.run(main())
+print("End Time:", time.strftime('%X'))
