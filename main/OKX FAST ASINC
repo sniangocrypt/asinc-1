@@ -6,7 +6,7 @@ import random
 import json
 import aiofiles
 
-
+dict = ["BTC", "ETH", "SOL"]
 #symbol = f"BTC"
 
 
@@ -29,9 +29,16 @@ async def fetch_all_order_books(symbol):
         data = json.load(file)
         print(data['data'][0])
 
+async def main():
+    tasks = []
+    for dicts in dict:
+        task = asyncio.create_task(fetch_all_order_books(dicts))
+        tasks.append(task)
+    await asyncio.gather(*tasks)
+
 
 #get_order_book(symbol=f"ETH")
 
 print("Start Time:", time.strftime('%X'))
-asyncio.run(fetch_all_order_books(symbol=f"ETH"))
+asyncio.run(main())
 print("End Time:", time.strftime('%X'))
