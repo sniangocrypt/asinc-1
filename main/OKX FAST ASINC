@@ -1,0 +1,25 @@
+import requests
+import asyncio
+from aiohttp import ClientSession
+import time
+import random
+import json
+import aiofiles
+
+
+#symbol = f"BTC"
+
+
+async def get_order_book(symbol):
+    async with ClientSession() as session:
+        url = f'https://www.okx.com/api/v5/market/books?instId={symbol}-USDT'
+        headers = {
+            'Accept': 'application/json',
+        }
+        async with session.get(url=url, headers=headers) as response:
+            data = await response.json()
+    with open('getorderbook.json', 'w') as file:
+        json.dump(data, file, indent=4)
+print("Start Time:", time.strftime('%X'))
+asyncio.run(get_order_book(symbol=f"ETH"))
+print("End Time:", time.strftime('%X'))
