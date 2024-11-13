@@ -1,6 +1,7 @@
 import requests
 import asyncio
 from aiohttp import ClientSession
+from collections import OrderedDict
 import time
 import random
 import json
@@ -10,35 +11,35 @@ dict = ["BTC", "ETH", "SOL"]
 #symbol = f"BTC"
 
 
-async def get_order_book(symbol):
+async def get_okx_info():
     async with ClientSession() as session:
-        url = f'https://www.okx.com/api/v5/market/books?instId={symbol}-USDT'
+        url = f'https://www.okx.com/api/v5/market/tickers?instType=SPOT'
         headers = {
             'Accept': 'application/json',
         }
         async with session.get(url=url, headers=headers) as response:
             data = await response.json()
-    with open('getorderbook.json', 'w') as file:
-        json.dump(data, file, indent=4)
-
-
-async def fetch_all_order_books(symbol):
-    await get_order_book(symbol)
-    print(f"{symbol}-USDT")
-    with open('getorderbook.json', 'r') as file:
+    async with aiofiles.open('okxbook.json', 'w') as file:
+        await file.write(json.dumps(data, indent=4))
+    with open('okxbook.json', 'r') as file:
         data = json.load(file)
-        print(data['data'][0])
+        okx = []
+        for ticker in data['data']:
+            if ticker['instId'][-5:] == "-USDT":
+                okx.append(ticker)
+                print(okx)
 
-async def main():
-    tasks = []
-    for dicts in dict:
-        task = asyncio.create_task(fetch_all_order_books(dicts))
-        tasks.append(task)
-    await asyncio.gather(*tasks)
+
+
+
+
+
+
+
 
 
 #get_order_book(symbol=f"ETH")
 
 print("Start Time:", time.strftime('%X'))
-asyncio.run(main())
+asyncio.run(get_okx_info())
 print("End Time:", time.strftime('%X'))
