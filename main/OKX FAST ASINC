@@ -29,7 +29,19 @@ async def get_okx_info():
                 okx.append(ticker)
                 print(okx)
 
-
+async def get_binance_info():
+    async with ClientSession() as session:
+        url = f'https://api.binance.com/api/v3/ticker/price'
+        headers = {
+            'Accept': 'application/json',
+        }
+        async with session.get(url=url, headers=headers) as response:
+            data = await response.json()
+            binance = []
+            for ticker in data:
+                if ticker['symbol'][-4:] == "USDT":
+                    binance.append(ticker)
+                    print(binance)
 
 
 
@@ -41,5 +53,5 @@ async def get_okx_info():
 #get_order_book(symbol=f"ETH")
 
 print("Start Time:", time.strftime('%X'))
-asyncio.run(get_okx_info())
+asyncio.run(get_binance_info())
 print("End Time:", time.strftime('%X'))
