@@ -19,15 +19,13 @@ async def get_okx_info():
         }
         async with session.get(url=url, headers=headers) as response:
             data = await response.json()
-    async with aiofiles.open('okxbook.json', 'w') as file:
-        await file.write(json.dumps(data, indent=4))
-    with open('okxbook.json', 'r') as file:
-        data = json.load(file)
         okx = []
         for ticker in data['data']:
             if ticker['instId'][-5:] == "-USDT":
                 okx.append(ticker)
-                print(okx)
+#                print(okx)
+        async with aiofiles.open('okxbook.json', 'w') as file:
+            await file.write(json.dumps(okx, indent=4))
 
 async def get_binance_info():
     async with ClientSession() as session:
@@ -41,7 +39,11 @@ async def get_binance_info():
             for ticker in data:
                 if ticker['symbol'][-4:] == "USDT":
                     binance.append(ticker)
-                    print(binance)
+#                    print(binance)
+        async with aiofiles.open('binancebook.json', 'w') as file:
+            await file.write(json.dumps(binance, indent=4))
+
+
 
 async def get_bybit_info():
     async with ClientSession() as session:
@@ -55,9 +57,14 @@ async def get_bybit_info():
             for ticker in data['result']['list']:
                 if ticker['symbol'][-4:] == "USDT":
                     bybit.append(ticker)
-                    print(bybit)
+#                    print(bybit)
+        async with aiofiles.open('bybitbook.json', 'w') as file:
+            await file.write(json.dumps(bybit, indent=4))
 
 
+async def main():
+    tasks = [get_okx_info(),get_binance_info(),get_bybit_info()]
+    await asyncio.gather(*tasks)
 
 
 
@@ -65,5 +72,5 @@ async def get_bybit_info():
 #get_order_book(symbol=f"ETH")
 
 print("Start Time:", time.strftime('%X'))
-asyncio.run(get_bybit_info())
+asyncio.run(main())
 print("End Time:", time.strftime('%X'))
