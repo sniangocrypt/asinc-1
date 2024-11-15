@@ -7,7 +7,7 @@ import random
 import json
 import aiofiles
 
-dict = ["BTC", "ETH", "SOL"]
+dict = []
 #symbol = f"BTC"
 
 
@@ -22,12 +22,16 @@ async def get_okx_info():
         okx = []
         for ticker in data['data']:
             if ticker['instId'][-5:] == "-USDT":
+                dict.append(ticker['instId'][:-5])
                 okx.append(ticker)
-#                print(okx)
+#        print(dict)
         async with aiofiles.open('okxbook.json', 'w') as file:
             await file.write(json.dumps(okx, indent=4))
 
+
+
 async def get_binance_info():
+    await get_okx_info()
     async with ClientSession() as session:
         url = f'https://api.binance.com/api/v3/ticker/price'
         headers = {
@@ -37,15 +41,16 @@ async def get_binance_info():
             data = await response.json()
             binance = []
             for ticker in data:
-                if ticker['symbol'][-4:] == "USDT":
+                if ticker['symbol'][-4:] == "USDT" and ticker['symbol'][:-4] in dict:
                     binance.append(ticker)
-#                    print(binance)
+#                    print(ticker)
         async with aiofiles.open('binancebook.json', 'w') as file:
             await file.write(json.dumps(binance, indent=4))
 
 
 
 async def get_bybit_info():
+    await get_okx_info()
     async with ClientSession() as session:
         url = f'https://api.bybit.com/v5/market/tickers?category=spot'
         headers = {
@@ -55,21 +60,43 @@ async def get_bybit_info():
             data = await response.json()
             bybit = []
             for ticker in data['result']['list']:
-                if ticker['symbol'][-4:] == "USDT":
+                if ticker['symbol'][-4:] == "USDT" and ticker['symbol'][:-4] in dict:
                     bybit.append(ticker)
 #                    print(bybit)
         async with aiofiles.open('bybitbook.json', 'w') as file:
             await file.write(json.dumps(bybit, indent=4))
 
 
+async def checker():
+    await get_okx_info()
+    await get_bybit_info()
+    await get_binance_info()
+    async with aiofiles.open('binancebook.json', 'r') as file:
+        data_binance = await file.read()
+    async with aiofiles.open('bybitbook.json', 'r') as file:
+        data_bybit = await file.read()
+    async with aiofiles.open('okxbook.json', 'r') as file:
+        data_okx = await file.read()
+    binance_check = json.loads(data_binance)
+    bybit_check = json.loads(data_bybit)
+    okx_check = json.loads(data_okx.replace("-", ""))
+    for binance, bybit, okx in zip(binance_check, bybit_check, okx_check):
+        okx['last'] = okx['symbol']
+        if binance['symbol'] in bybit['symbol'] and binance['symbol'] in okx['last']:
+            print(float(binance['price']/bybit['lastPrice']))
+#            if float(binance['price']/bybit['lastPrice']) or float(binance['price']/okx['last']) >= 1.0005:
+
+
+
+#    print(binance_obj['symbol'])
+
+
+
 async def main():
-    tasks = [get_okx_info(),get_binance_info(),get_bybit_info()]
-    await asyncio.gather(*tasks)
+#    tasks = [checker()]
+#    await asyncio.gather(*tasks)
+    await checker()
 
-
-
-
-#get_order_book(symbol=f"ETH")
 
 print("Start Time:", time.strftime('%X'))
 asyncio.run(main())
