@@ -80,11 +80,17 @@ async def checker():
     binance_check = json.loads(data_binance)
     bybit_check = json.loads(data_bybit)
     okx_check = json.loads(data_okx.replace("-", ""))
+    print(binance_check)
+    print(bybit_check)
     for binance, bybit, okx in zip(binance_check, bybit_check, okx_check):
-        okx['last'] = okx['symbol']
-        if binance['symbol'] in bybit['symbol'] and binance['symbol'] in okx['last']:
-            print(float(binance['price']/bybit['lastPrice']))
-#            if float(binance['price']/bybit['lastPrice']) or float(binance['price']/okx['last']) >= 1.0005:
+        print(binance['symbol'])
+        print(bybit['symbol'])
+        if binance['symbol'] == bybit['symbol']:
+            print(float(binance['price']) / float(bybit['lastPrice']))
+            if float(binance['price']) / float(bybit['lastPrice']) >= 1:
+                print("FWFWFWFWF")
+    #                print(float(binance['price'])/float(bybit['lastPrice']))
+    #            if float(binance['price']/bybit['lastPrice']) or float(binance['price']/okx['last']) >= 1.0005:
 
 
 
@@ -101,3 +107,4 @@ async def main():
 print("Start Time:", time.strftime('%X'))
 asyncio.run(main())
 print("End Time:", time.strftime('%X'))
+
