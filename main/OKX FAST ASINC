@@ -9,7 +9,7 @@ import aiofiles
 
 dict = []
 
-range = 1.01
+range = 1.001
 
 
 async def get_okx_info():
@@ -89,10 +89,12 @@ async def checker():
             if float(binance['price']) / float(bybit['lastPrice']) >= range:
                 print("Arbitrage detected")
                 print(binance['symbol'])
+                print("Направление BINANCE - BYBIT")
                 print(f"Разница в цене {(((float(binance['price'])/float(bybit['lastPrice'])) - 1) * 100)}%")
             elif float(bybit['lastPrice'])/float(binance['price']) >= 1.01:
                 print("Arbitrage detected")
                 print(bybit['symbol'])
+                print("Направление BYBIT - BINANCE")
                 print(f"Разница в цене {(((float(bybit['lastPrice'])/float(binance['price'])) - 1) * 100)}%")
 
 # ЧЕКАЕМ РАЗНИЦУ БИНАНСА И ОКХ В 2 СТОРОНЫ (Б/О) (О/Б)
@@ -101,10 +103,12 @@ async def checker():
             if float(binance['price']) / float(okx['last']) >= range:
                 print("Arbitrage detected")
                 print(binance['symbol'])
+                print("Направление BINANCE - OKX")
                 print(f"Разница в цене {(((float(binance['price'])/float(okx['last'])) - 1) * 100)}%")
             elif float(okx['last']) / float(binance['symbol']) >= range:
                 print("Arbitrage detected")
                 print(okx['instId'])
+                print("Направление OKX - BINANCE")
                 print(f"Разница в цене {(((float(okx['last']) / float(binance['symbol'])) - 1) * 100)}%")
 
 # ЧЕКАЕМ РАЗНИЦУ БУБИТ И ОКХ В 2 СТОРОНЫ (БУ/О) (О/БУ)
@@ -112,19 +116,19 @@ async def checker():
             if float(bybit['lastPrice']) / float(okx['last']) >= range:
                 print("Arbitrage detected")
                 print(bybit['symbol'])
+                print("Направление BYBIT - OKX")
                 print(f"Разница в цене {(((float(bybit['lastPrice'])/float(okx['last'])) - 1) * 100)}%")
             elif float(okx['last']) / float(bybit['lastPrice']) >= range:
                 print("Arbitrage detected")
                 print(okx['instId'])
+                print("Направление OKX - BYBIT")
                 print(f"Разница в цене {(((float(okx['last']) / float(bybit['lastPrice'])) - 1) * 100)}%")
 
-        else:
-            print("НИЧЕГО НЕ НАШЛИ")
-            break
+        else:print("НИЧЕГО НЕ НАШЛИ")
+            
 
 
 
-#    print(binance_obj['symbol'])
 
 
 
@@ -137,4 +141,3 @@ async def main():
 print("Start Time:", time.strftime('%X'))
 asyncio.run(main())
 print("End Time:", time.strftime('%X'))
-
