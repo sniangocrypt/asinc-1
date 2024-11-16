@@ -69,7 +69,6 @@ async def get_bybit_info():
 
 
 async def checker():
-    await get_okx_info()
     await get_bybit_info()
     await get_binance_info()
     async with aiofiles.open('binancebook.json', 'r') as file:
