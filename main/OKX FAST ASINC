@@ -9,7 +9,7 @@ import aiofiles
 
 dict = []
 
-range = 1.001
+range = 1.001 # УКАЖИТЕ ЗНАЧЕНИЕ РАЗНИЦЫ В %. В ЦИСЛОВОМ ФОРМАТЕ (1.01 = 1% / 1.1 = 10%)
 
 
 async def get_okx_info():
