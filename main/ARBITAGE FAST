@@ -1,13 +1,16 @@
 import requests
 import asyncio
 from aiohttp import ClientSession
+from collections import OrderedDict
 import time
 import random
 import json
 import aiofiles
 
-dict = ["BTC", "ETH", "SOL"]
-#symbol = f"BTC"
+dict = []
+
+
+range = 1.001 # УКАЖИТЕ ЗНАЧЕНИЕ РАЗНИЦЫ В %. В ЦИСЛОВОМ ФОРМАТЕ (1.01 = 1% / 1.1 = 10%)
 
 
 async def get_okx_info():
@@ -18,26 +21,121 @@ async def get_okx_info():
         }
         async with session.get(url=url, headers=headers) as response:
             data = await response.json()
-    with open('okxbook.json', 'w') as file:
-        json.dump(data, file, indent=4)
-
-
-async def fetch_all_order_books():
-    await get_okx_info()
-    with open('okxbook.json', 'r') as file:
-        data = json.load(file)
+        okx = []
         for ticker in data['data']:
             if ticker['instId'][-5:] == "-USDT":
-                data['data']= ticker['instId']
-                print(data['data'])
-                with open('okxtokens.json', 'w') as file:
-                    json.dump(data['data'], file, indent=4)
+                dict.append(ticker['instId'][:-5])
+                okx.append(ticker)
+        async with aiofiles.open('okxbook.json', 'w', encoding="utf-8") as file:
+            await file.write(json.dumps(okx, indent=4))
+
+
+
+async def get_binance_info():
+    await get_okx_info()
+    async with ClientSession() as session:
+        url = f'https://api.binance.com/api/v3/ticker/price'
+        headers = {
+            'Accept': 'application/json',
+        }
+        async with session.get(url=url, headers=headers) as response:
+            data = await response.json()
+            binance = []
+            for ticker in data:
+                if ticker['symbol'][-4:] == "USDT" and ticker['symbol'][:-4] in dict:
+                    binance.append(ticker)
+#                    print(ticker)
+        async with aiofiles.open('binancebook.json', 'w', encoding="utf-8") as file:
+            await file.write(json.dumps(binance, indent=4))
+
+
+
+async def get_bybit_info():
+    await get_okx_info()
+    async with ClientSession() as session:
+        url = f'https://api.bybit.com/v5/market/tickers?category=spot'
+        headers = {
+            'Accept': 'application/json',
+        }
+        async with session.get(url=url, headers=headers) as response:
+            data = await response.json()
+            bybit = []
+            for ticker in data['result']['list']:
+                if ticker['symbol'][-4:] == "USDT" and ticker['symbol'][:-4] in dict:
+                    bybit.append(ticker)
+#                    print(bybit)
+        async with aiofiles.open('bybitbook.json', 'w', encoding="utf-8") as file:
+            await file.write(json.dumps(bybit, indent=4))
+
+
+async def checker():
+    await get_bybit_info()
+    await get_binance_info()
+    with open('binancebook.json', 'r', encoding="utf-8") as file:
+        binance_check = json.load(file)
+    with open('bybitbook.json', 'r', encoding="utf-8") as file:
+        bybit_check = json.load(file)
+    with open('okxbook.json', 'r', encoding="utf-8") as file:
+        okx_check = json.load(file)
+
+
+    for binance, bybit, okx in zip(binance_check, bybit_check, okx_check):
+
+# ЧЕКАЕМ РАЗНИЦУ БИНАНСА И БУБИТА В 2 СТОРОНЫ (Б/БУ) (БУ/Б)
+
+        if binance['symbol'] in dict == bybit['symbol'] in dict:
+            if float(binance['price']) / float(bybit['lastPrice']) >= range:
+                print("Arbitrage detected")
+                print(binance['symbol'])
+                print("Направление BINANCE - BYBIT")
+                print(f"Разница в цене {(((float(binance['price'])/float(bybit['lastPrice'])) - 1) * 100)}%")
+            elif float(bybit['lastPrice'])/float(binance['price']) >= 1.01:
+                print("Arbitrage detected")
+                print(bybit['symbol'])
+                print("Направление BYBIT - BINANCE")
+                print(f"Разница в цене {(((float(bybit['lastPrice'])/float(binance['price'])) - 1) * 100)}%")
+
+# ЧЕКАЕМ РАЗНИЦУ БИНАНСА И ОКХ В 2 СТОРОНЫ (Б/О) (О/Б)
+
+        elif binance['symbol'] == okx['instId'].replace("-", "") and (binance['symbol'],okx['instId'].replace("-", "")) in dict:
+            if float(binance['price']) / float(okx['last']) >= range:
+                print("Arbitrage detected")
+                print(binance['symbol'])
+                print("Направление BINANCE - OKX")
+                print(f"Разница в цене {(((float(binance['price'])/float(okx['last'])) - 1) * 100)}%")
+            elif float(okx['last']) / float(binance['symbol']) >= range:
+                print("Arbitrage detected")
+                print(okx['instId'])
+                print("Направление OKX - BINANCE")
+                print(f"Разница в цене {(((float(okx['last']) / float(binance['symbol'])) - 1) * 100)}%")
+
+# ЧЕКАЕМ РАЗНИЦУ БУБИТ И ОКХ В 2 СТОРОНЫ (БУ/О) (О/БУ)
+        elif bybit['symbol'] in dict == okx['instId'].replace("-", "") in dict:
+            if float(bybit['lastPrice']) / float(okx['last']) >= range:
+                print("Arbitrage detected")
+                print(bybit['symbol'])
+                print("Направление BYBIT - OKX")
+                print(f"Разница в цене {(((float(bybit['lastPrice'])/float(okx['last'])) - 1) * 100)}%")
+            elif float(okx['last']) / float(bybit['lastPrice']) >= range:
+                print("Arbitrage detected")
+                print(okx['instId'])
+                print("Направление OKX - BYBIT")
+                print(f"Разница в цене {(((float(okx['last']) / float(bybit['lastPrice'])) - 1) * 100)}%")
+
+        else:print("НИЧЕГО НЕ НАШЛИ")
 
 
 
 
-#get_order_book(symbol=f"ETH")
+
+
+
+async def main():
+#    tasks = [checker()]
+#    await asyncio.gather(*tasks)
+    await checker()
+
 
 print("Start Time:", time.strftime('%X'))
-asyncio.run(fetch_all_order_books())
+asyncio.run(main())
 print("End Time:", time.strftime('%X'))
