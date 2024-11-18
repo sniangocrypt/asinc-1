@@ -10,7 +10,7 @@ import aiofiles
 dict = []
 
 
-range = 1.001 # УКАЖИТЕ ЗНАЧЕНИЕ РАЗНИЦЫ В %. В ЦИСЛОВОМ ФОРМАТЕ (1.01 = 1% / 1.1 = 10%)
+range = 1.002 # УКАЖИТЕ ЗНАЧЕНИЕ РАЗНИЦЫ В %. В ЦИСЛОВОМ ФОРМАТЕ (1.01 = 1% / 1.1 = 10%)
 
 
 async def get_okx_info():
@@ -73,17 +73,22 @@ async def checker():
     await get_binance_info()
     with open('binancebook.json', 'r', encoding="utf-8") as file:
         binance_check = json.load(file)
+        binance_check = sorted(binance_check, key=lambda x: x['symbol'])
     with open('bybitbook.json', 'r', encoding="utf-8") as file:
         bybit_check = json.load(file)
+        bybit_check = sorted(bybit_check, key=lambda x: x['symbol'])
     with open('okxbook.json', 'r', encoding="utf-8") as file:
         okx_check = json.load(file)
+        okx_check = sorted(okx_check, key=lambda x: x['instId'])
+        for item in okx_check:
+            item['instId'] = item['instId'].replace('-', '')
 
 
     for binance, bybit, okx in zip(binance_check, bybit_check, okx_check):
 
 # ЧЕКАЕМ РАЗНИЦУ БИНАНСА И БУБИТА В 2 СТОРОНЫ (Б/БУ) (БУ/Б)
 
-        if binance['symbol'] in dict == bybit['symbol'] in dict:
+        if binance['symbol'] == bybit['symbol']:
             if float(binance['price']) / float(bybit['lastPrice']) >= range:
                 print("Arbitrage detected")
                 print(binance['symbol'])
@@ -97,20 +102,20 @@ async def checker():
 
 # ЧЕКАЕМ РАЗНИЦУ БИНАНСА И ОКХ В 2 СТОРОНЫ (Б/О) (О/Б)
 
-        elif binance['symbol'] == okx['instId'].replace("-", "") and (binance['symbol'],okx['instId'].replace("-", "")) in dict:
+        elif binance['symbol'] == okx['instId']:
             if float(binance['price']) / float(okx['last']) >= range:
                 print("Arbitrage detected")
                 print(binance['symbol'])
                 print("Направление BINANCE - OKX")
                 print(f"Разница в цене {(((float(binance['price'])/float(okx['last'])) - 1) * 100)}%")
-            elif float(okx['last']) / float(binance['symbol']) >= range:
+            elif float(okx['last']) / float(binance['price']) >= range:
                 print("Arbitrage detected")
                 print(okx['instId'])
                 print("Направление OKX - BINANCE")
-                print(f"Разница в цене {(((float(okx['last']) / float(binance['symbol'])) - 1) * 100)}%")
+                print(f"Разница в цене {(((float(okx['last']) / float(binance['price'])) - 1) * 100)}%")
 
 # ЧЕКАЕМ РАЗНИЦУ БУБИТ И ОКХ В 2 СТОРОНЫ (БУ/О) (О/БУ)
-        elif bybit['symbol'] in dict == okx['instId'].replace("-", "") in dict:
+        elif bybit['symbol'] == okx['instId']:
             if float(bybit['lastPrice']) / float(okx['last']) >= range:
                 print("Arbitrage detected")
                 print(bybit['symbol'])
@@ -121,8 +126,8 @@ async def checker():
                 print(okx['instId'])
                 print("Направление OKX - BYBIT")
                 print(f"Разница в цене {(((float(okx['last']) / float(bybit['lastPrice'])) - 1) * 100)}%")
-
         else:print("НИЧЕГО НЕ НАШЛИ")
+
 
 
 
@@ -139,3 +144,4 @@ async def main():
 print("Start Time:", time.strftime('%X'))
 asyncio.run(main())
 print("End Time:", time.strftime('%X'))
+
