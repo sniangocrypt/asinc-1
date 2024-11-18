@@ -100,9 +100,12 @@ async def checker():
                 print("Направление BYBIT - BINANCE")
                 print(f"Разница в цене {(((float(bybit['lastPrice'])/float(binance['price'])) - 1) * 100)}%")
 
+            else:print("НИЧЕГО НЕ НАШЛИ МЕЖДУ БИНАНСА И БУБИТА")
+
+
 # ЧЕКАЕМ РАЗНИЦУ БИНАНСА И ОКХ В 2 СТОРОНЫ (Б/О) (О/Б)
 
-        elif binance['symbol'] == okx['instId']:
+        if binance['symbol'] == okx['instId']:
             if float(binance['price']) / float(okx['last']) >= range:
                 print("Arbitrage detected")
                 print(binance['symbol'])
@@ -113,9 +116,9 @@ async def checker():
                 print(okx['instId'])
                 print("Направление OKX - BINANCE")
                 print(f"Разница в цене {(((float(okx['last']) / float(binance['price'])) - 1) * 100)}%")
-
+            else:print("НИЧЕГО НЕ НАШЛИ МЕЖДУ БИНАНСА И ОКХ")
 # ЧЕКАЕМ РАЗНИЦУ БУБИТ И ОКХ В 2 СТОРОНЫ (БУ/О) (О/БУ)
-        elif bybit['symbol'] == okx['instId']:
+        if bybit['symbol'] == okx['instId']:
             if float(bybit['lastPrice']) / float(okx['last']) >= range:
                 print("Arbitrage detected")
                 print(bybit['symbol'])
@@ -126,7 +129,8 @@ async def checker():
                 print(okx['instId'])
                 print("Направление OKX - BYBIT")
                 print(f"Разница в цене {(((float(okx['last']) / float(bybit['lastPrice'])) - 1) * 100)}%")
-        else:print("НИЧЕГО НЕ НАШЛИ")
+            else:print("НИЧЕГО НЕ НАШЛИ МЕЖДУ БУБИТ И ОКХ")
+
 
 
 
